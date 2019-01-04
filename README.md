@@ -57,6 +57,30 @@ Cupy
 numpy  
 scipy  
 
+## Archtecture
+feature: Convolution-Affine paralell (CL-block)  
+
+Generator: CL * 6 + Conv * 1  
+64 channel (Conv 63 + Affine 1) I/O  
+Affine: single layer Affine, 128 nodes  
+Conv: 3x3, stride 1  
+Activation (Conv, Affine): LeakyReLU  
+
+Discriminator: SpectrumNorm Conv * 5 + mini-batch discrimination * 1  
+Downsampling: 1/2 by stride  
+Conv: 4x4, stride 2  
+Activation: LeakyReLU  
+
+batch size: 32  
+
+
+
+* trainer.py
+  + models.py
+    - CLBlock (block.py) : Convolution + 
+      * ConvBlock
+      * L1DBlock
+      * F.concat [doc](http://docs.chainer.org/en/stable/reference/generated/chainer.functions.concat.html)
 ## LICENCE  
 MIT  https://github.com/pstuvwx/Deep_VoiceChanger/blob/master/LICENSE  
 
