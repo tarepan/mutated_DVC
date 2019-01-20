@@ -33,8 +33,8 @@ def init_disc(gpu):
 
     o = chainer.optimizers.Adam(5e-4, beta1=0.0, beta2=0.9)
     o.setup(n)
-    o.add_hook(chainer.optimizer.GradientClipping(10))
-    o.add_hook(chainer.optimizer.WeightDecay(1e-4))
+    # o.add_hook(chainer.optimizer.GradientClipping(10))
+    # o.add_hook(chainer.optimizer.WeightDecay(1e-4))
 
     return n, o
 
