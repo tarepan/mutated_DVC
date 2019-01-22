@@ -77,7 +77,8 @@ class ResBlock(chainer.Chain):
 class ConvBlock(chainer.Chain):
     def __init__(self, in_channels, out_channels, mode='none', activation=F.leaky_relu, bn=False, dr=None):
         super(ConvBlock, self).__init__()
-        initializer = chainer.initializers.GlorotUniform()
+        # initializer = chainer.initializers.GlorotUniform()
+        initializer = chainer.initializers.HeUniform()
         self.activation = activation
         self.bn = bn
         self.dr = dr
@@ -196,7 +197,8 @@ class SNResBlock(chainer.Chain):
 class SNConvBlock(chainer.Chain):
     def __init__(self, in_channels, out_channels, mode='none', activation=F.leaky_relu, bn=False, dr=None):
         super(SNConvBlock, self).__init__()
-        initializer = chainer.initializers.GlorotUniform()
+        # initializer = chainer.initializers.GlorotUniform()
+        initializer = chainer.initializers.HeUniform()
         self.activation = activation
         self.bn = bn
         self.dr = dr
@@ -260,7 +262,8 @@ class SNLinearBlock(chainer.Chain):
 class SNMDBlock(chainer.Chain):
     def __init__(self, in_channels, in_size=4, B=100, C=5, gap=True, dr=None):
         super(SNMDBlock, self).__init__()
-        initializer = chainer.initializers.GlorotUniform()
+        # initializer = chainer.initializers.GlorotUniform()
+        initializer = chainer.initializers.HeUniform()
         self.B = B
         self.C = C
         self.dr = dr
@@ -318,7 +321,8 @@ class SNL1DBlock(chainer.Chain):
 class L1DBlock(chainer.Chain):
     def __init__(self, in_ch, out_ch, width, activation=F.leaky_relu, dr=None):
         super(L1DBlock, self).__init__()
-        initializer = chainer.initializers.GlorotUniform()
+        # initializer = chainer.initializers.GlorotUniform()
+        initializer = chainer.initializers.HeUniform()
         self.activation = activation
         self.dr = dr
         self.out_ch = out_ch
