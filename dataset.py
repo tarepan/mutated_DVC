@@ -90,11 +90,54 @@ class PreEncodedDataset(chainer.dataset.DatasetMixin):
                     break
         return np.copy(self.images[:,p:p+height+padding*2,:])
 
+
+from scipy.interpolate import interp2d
+import numpy as np
+from librosa.core import hz_to_mel as hz2mel
+from librosa.core import mel_to_hz as mel2hz
+def linear2mel(spectrogram, *, freq_min, freq_max):
+    """
+    Convert linear-frequency into mel-frequency w/o dimension compression (with linear interpolation in linear-frequency domain)
+    Args:
+        spectrogram (numpy.ndarray 2D): magnitude, IF and any other mel-compatible spectrogram
+    Returns:
+        numpy.ndarray 2D: mel-nized spectrogram
+    """
+    linear_freq = np.linspace(start=freq_min, stop=freq_max, num=spectrogram.shape[0], endpoint=True)
+    time = range(spectrogram.shape[1])
+    melnizer = interp2d(time, linear_freq, spectrogram)
+
+    even_spaced_mel = np.linspace(start=hz2mel(freq_min, htk=True), stop=hz2mel(freq_max, htk=True), num=spectrogram.shape[0], endpoint=True)
+    mel_in_freq = [mel2hz(mel, htk=True) for mel in even_spaced_mel]
+    mel_spectrogram = melnizer(time, mel_in_freq)
+    return mel_spectrogram
+
+def mel2linear(melspectrogram, *, freq_min, freq_max):
+    """
+    Convert mel-frequency into linear-frequency w/o dimension compression (with linear interpolation in linear-frequency domain)
+    Args:
+        melspectrogram (numpy.ndarray 2D): magnitude, IF and any other melspectrogram
+    Returns:
+        numpy.ndarray 2D: linear-nized spectrogram
+    """
+    time = range(melspectrogram.shape[1])
+    even_spaced_mel = np.linspace(start=hz2mel(freq_min, htk=True), stop=hz2mel(freq_max, htk=True), num=melspectrogram.shape[0], endpoint=True)
+    mel_in_freq = [mel2hz(mel, htk=True) for mel in even_spaced_mel]
+    linearnizer = interp2d(time, mel_in_freq, melspectrogram)
+
+    linear_freq = np.linspace(start=freq_min, stop=freq_max, num=melspectrogram.shape[0], endpoint=True)
+    spectrogram = linearnizer(time, linear_freq)
+    return spectrogram
+
+
 def wave2input_image(wave, window, pos=0, pad=0):
     wave_image = np.hstack([wave[pos+i*sride:pos+(i+pad*2)*sride+dif].reshape(height+pad*2, sride) for i in range(256//sride)])[:,:254]
     wave_image *= window
     spectrum_image = np.fft.fft(wave_image, axis=1)
-    input_image = np.abs(spectrum_image[:,:128].reshape(1, height+pad*2, 128), dtype=np.float32)
+
+    # mel-nize
+    input_image = linear2mel(np.abs(spectrum_image[:,:128].T, dtype=np.float32), freq_min=0, freq_max=16000).T
+    input_image = input_image.reshape(1, height+pad*2, 128)
 
     np.clip(input_image, 1000, None, out=input_image)
     np.log(input_image, out=input_image)
@@ -115,7 +158,9 @@ def reverse(output_image):
     src -= bias
     np.abs(src, out=src)
     np.exp(src, out=src)
-    
+
+    # linear-nize
+    src = mel2linear(src.T, freq_min=0, freq_max=16000).T
     src[src < 1000] = 1
 
     mil = np.array(src[:,1:127][:,::-1])
